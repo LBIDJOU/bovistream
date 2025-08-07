@@ -217,37 +217,35 @@ const selectedCameraName = computed(() => {
   return cameras.value.find((c) => c.id === selectedCamera.value)?.name || 'Camera 1 (Main Entrance)'
 })
 
-// Check if File System Access API is supported
-const isFileSystemAccessSupported = 'showDirectoryPicker' in window
-
 const selectScreenshotDirectory = async () => {
   try {
-    if (isFileSystemAccessSupported) {
-      // Use File System Access API for modern browsers
-      const directoryHandle = await (window as any).showDirectoryPicker()
-      screenshotPath.value = directoryHandle.name
-    } else {
-      // Fallback: create a hidden file input for directory selection
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.webkitdirectory = true
-      input.style.display = 'none'
+    // Use directory input for browser compatibility
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.webkitdirectory = true
+    input.style.display = 'none'
+    input.accept = '*/*'
 
-      input.onchange = (e) => {
-        const files = (e.target as HTMLInputElement).files
-        if (files && files.length > 0) {
-          // Get the directory path from the first file
-          const firstFile = files[0]
-          const pathParts = firstFile.webkitRelativePath.split('/')
-          pathParts.pop() // Remove filename to get directory path
-          screenshotPath.value = pathParts.join('/')
-        }
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files
+      if (files && files.length > 0) {
+        // Get the directory path from the first file
+        const firstFile = files[0]
+        const pathParts = firstFile.webkitRelativePath.split('/')
+        pathParts.pop() // Remove filename to get directory path
+        const directoryPath = pathParts.join('/')
+        screenshotPath.value = directoryPath || firstFile.webkitRelativePath.split('/')[0]
+        error.value = null // Clear any previous errors
       }
-
-      document.body.appendChild(input)
-      input.click()
-      document.body.removeChild(input)
     }
+
+    input.onerror = () => {
+      error.value = 'Failed to access directory. Please try again.'
+    }
+
+    document.body.appendChild(input)
+    input.click()
+    document.body.removeChild(input)
   } catch (error) {
     console.error('Error selecting screenshot directory:', error)
     error.value = 'Failed to select directory. Please try again.'
@@ -256,32 +254,33 @@ const selectScreenshotDirectory = async () => {
 
 const selectRecordingDirectory = async () => {
   try {
-    if (isFileSystemAccessSupported) {
-      // Use File System Access API for modern browsers
-      const directoryHandle = await (window as any).showDirectoryPicker()
-      recordingPath.value = directoryHandle.name
-    } else {
-      // Fallback: create a hidden file input for directory selection
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.webkitdirectory = true
-      input.style.display = 'none'
+    // Use directory input for browser compatibility
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.webkitdirectory = true
+    input.style.display = 'none'
+    input.accept = '*/*'
 
-      input.onchange = (e) => {
-        const files = (e.target as HTMLInputElement).files
-        if (files && files.length > 0) {
-          // Get the directory path from the first file
-          const firstFile = files[0]
-          const pathParts = firstFile.webkitRelativePath.split('/')
-          pathParts.pop() // Remove filename to get directory path
-          recordingPath.value = pathParts.join('/')
-        }
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files
+      if (files && files.length > 0) {
+        // Get the directory path from the first file
+        const firstFile = files[0]
+        const pathParts = firstFile.webkitRelativePath.split('/')
+        pathParts.pop() // Remove filename to get directory path
+        const directoryPath = pathParts.join('/')
+        recordingPath.value = directoryPath || firstFile.webkitRelativePath.split('/')[0]
+        error.value = null // Clear any previous errors
       }
-
-      document.body.appendChild(input)
-      input.click()
-      document.body.removeChild(input)
     }
+
+    input.onerror = () => {
+      error.value = 'Failed to access directory. Please try again.'
+    }
+
+    document.body.appendChild(input)
+    input.click()
+    document.body.removeChild(input)
   } catch (error) {
     console.error('Error selecting recording directory:', error)
     error.value = 'Failed to select directory. Please try again.'
