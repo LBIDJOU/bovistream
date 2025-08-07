@@ -72,28 +72,6 @@
 
         <!-- Control Panel -->
         <div class="w-full xl:w-80 space-y-4 sm:space-y-6">
-          <!-- File Location for Screenshots -->
-          <div class="space-y-3">
-            <div class="flex items-center gap-2 text-sm text-gray-600">
-              <Paperclip class="w-4 h-4" />
-              <span>File Location</span>
-            </div>
-            <div class="flex gap-2">
-              <input
-                v-model="screenshotPath"
-                placeholder="Enter screenshot save path..."
-                class="h-12 bg-gray-50 border border-gray-300 rounded-md px-3 flex-1"
-              />
-              <button
-                @click="selectScreenshotDirectory"
-                class="h-12 w-12 bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 flex items-center justify-center"
-                title="Browse for folder"
-              >
-                <FolderOpen class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
           <!-- Screenshot Button -->
           <button
             @click="handleScreenshot"
@@ -101,28 +79,6 @@
           >
             Screenshot
           </button>
-
-          <!-- File Location for Recording -->
-          <div class="space-y-3">
-            <div class="flex items-center gap-2 text-sm text-gray-600">
-              <Paperclip class="w-4 h-4" />
-              <span>File Location</span>
-            </div>
-            <div class="flex gap-2">
-              <input
-                v-model="recordingPath"
-                placeholder="Enter recording save path..."
-                class="h-12 bg-gray-50 border border-gray-300 rounded-md px-3 flex-1"
-              />
-              <button
-                @click="selectRecordingDirectory"
-                class="h-12 w-12 bg-gray-50 border border-gray-300 rounded-md hover:bg-gray-100 flex items-center justify-center"
-                title="Browse for folder"
-              >
-                <FolderOpen class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
 
           <!-- Recording Controls -->
           <div class="flex flex-col sm:flex-row gap-3">
@@ -185,8 +141,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue'
 import {
-  Paperclip,
-  FolderOpen,
   Camera,
   Video,
   Square,
@@ -194,8 +148,6 @@ import {
 } from 'lucide-vue-next'
 import { CameraRequest, CameraResponse, CameraStatus } from '@shared/camera'
 
-const screenshotPath = ref('')
-const recordingPath = ref('')
 const selectedCamera = ref('camera1')
 const isRecording = ref(false)
 const isStreaming = ref(false)
@@ -346,7 +298,6 @@ const fetchCameraStatus = async () => {
 const handleScreenshot = async () => {
   try {
     const request: CameraRequest = {
-      path: screenshotPath.value,
       cameraId: selectedCamera.value,
     }
 
@@ -371,7 +322,6 @@ const handleScreenshot = async () => {
 const handleStartRecording = async () => {
   try {
     const request: CameraRequest = {
-      path: recordingPath.value,
       cameraId: selectedCamera.value,
     }
 
