@@ -183,68 +183,6 @@ const selectedCameraName = computed(() => {
   return cameras.value.find((c) => c.id === selectedCamera.value)?.name || 'Camera 1 (Main Entrance)'
 })
 
-// Check if File System Access API is supported
-const isFileSystemAccessSupported = 'showDirectoryPicker' in window
-
-const selectScreenshotDirectory = async () => {
-  try {
-    if (isFileSystemAccessSupported) {
-      const directoryHandle = await (window as any).showDirectoryPicker()
-      screenshotPath.value = directoryHandle.name + '/'
-    } else {
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.webkitdirectory = true
-      input.style.display = 'none'
-
-      input.onchange = (e) => {
-        const files = (e.target as HTMLInputElement).files
-        if (files && files.length > 0) {
-          const firstFile = files[0]
-          const pathParts = firstFile.webkitRelativePath.split('/')
-          pathParts.pop()
-          screenshotPath.value = pathParts.join('/') + '/'
-        }
-      }
-
-      document.body.appendChild(input)
-      input.click()
-      document.body.removeChild(input)
-    }
-  } catch (error) {
-    console.error('Error selecting directory:', error)
-  }
-}
-
-const selectRecordingDirectory = async () => {
-  try {
-    if (isFileSystemAccessSupported) {
-      const directoryHandle = await (window as any).showDirectoryPicker()
-      recordingPath.value = directoryHandle.name + '/'
-    } else {
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.webkitdirectory = true
-      input.style.display = 'none'
-
-      input.onchange = (e) => {
-        const files = (e.target as HTMLInputElement).files
-        if (files && files.length > 0) {
-          const firstFile = files[0]
-          const pathParts = firstFile.webkitRelativePath.split('/')
-          pathParts.pop()
-          recordingPath.value = pathParts.join('/') + '/'
-        }
-      }
-
-      document.body.appendChild(input)
-      input.click()
-      document.body.removeChild(input)
-    }
-  } catch (error) {
-    console.error('Error selecting directory:', error)
-  }
-}
 
 const initializeBackendStream = async () => {
   try {
