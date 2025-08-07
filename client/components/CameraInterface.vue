@@ -72,30 +72,61 @@
 
         <!-- Control Panel -->
         <div class="w-full xl:w-80 space-y-4 sm:space-y-6">
-          <!-- Screenshot Button -->
-          <button
-            @click="handleScreenshot"
-            class="w-full h-12 bg-camera-green hover:bg-camera-green/90 text-white font-medium text-sm sm:text-base rounded-md"
-          >
-            Screenshot
-          </button>
+          <!-- Screenshot Section -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <Camera class="w-4 h-4" />
+              <span>Screenshot Save Location</span>
+            </div>
+            <button
+              @click="selectScreenshotDirectory"
+              class="w-full h-12 bg-gray-50 border border-gray-300 rounded-md text-left px-3 hover:bg-gray-100 flex items-center justify-between"
+            >
+              <span class="text-sm text-gray-600 truncate">
+                {{ screenshotPath || 'Click to select folder...' }}
+              </span>
+              <FolderOpen class="w-4 h-4 text-gray-400" />
+            </button>
+            <button
+              @click="handleScreenshot"
+              :disabled="!screenshotPath"
+              class="w-full h-12 bg-camera-green hover:bg-camera-green/90 text-white font-medium text-sm sm:text-base rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Take Screenshot
+            </button>
+          </div>
 
-          <!-- Recording Controls -->
-          <div class="flex flex-col sm:flex-row gap-3">
+          <!-- Recording Section -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+              <Video class="w-4 h-4" />
+              <span>Recording Save Location</span>
+            </div>
             <button
-              @click="handleStartRecording"
-              :disabled="isRecording"
-              class="flex-1 h-12 bg-camera-green hover:bg-camera-green/90 text-white font-medium text-sm sm:text-base disabled:opacity-50 rounded-md"
+              @click="selectRecordingDirectory"
+              class="w-full h-12 bg-gray-50 border border-gray-300 rounded-md text-left px-3 hover:bg-gray-100 flex items-center justify-between"
             >
-              Start Recording
+              <span class="text-sm text-gray-600 truncate">
+                {{ recordingPath || 'Click to select folder...' }}
+              </span>
+              <FolderOpen class="w-4 h-4 text-gray-400" />
             </button>
-            <button
-              @click="handleStopRecording"
-              :disabled="!isRecording"
-              class="flex-1 h-12 bg-camera-red hover:bg-camera-red/90 text-white font-medium text-sm sm:text-base disabled:opacity-50 rounded-md"
-            >
-              Stop Recording
-            </button>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button
+                @click="handleStartRecording"
+                :disabled="isRecording || !recordingPath"
+                class="flex-1 h-12 bg-camera-green hover:bg-camera-green/90 text-white font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+              >
+                Start Recording
+              </button>
+              <button
+                @click="handleStopRecording"
+                :disabled="!isRecording"
+                class="flex-1 h-12 bg-camera-red hover:bg-camera-red/90 text-white font-medium text-sm sm:text-base disabled:opacity-50 rounded-md"
+              >
+                Stop Recording
+              </button>
+            </div>
           </div>
 
           <!-- Camera Selection -->
@@ -145,10 +176,13 @@ import {
   Video,
   Square,
   AlertCircle,
+  FolderOpen,
 } from 'lucide-vue-next'
 import { CameraRequest, CameraResponse, CameraStatus } from '@shared/camera'
 
 const selectedCamera = ref('camera1')
+const screenshotPath = ref('')
+const recordingPath = ref('')
 const isRecording = ref(false)
 const isStreaming = ref(false)
 const currentRecordingSession = ref<string | null>(null)
@@ -182,6 +216,77 @@ const streamImgRef = ref<HTMLImageElement>()
 const selectedCameraName = computed(() => {
   return cameras.value.find((c) => c.id === selectedCamera.value)?.name || 'Camera 1 (Main Entrance)'
 })
+
+// Check if File System Access API is supported
+const isFileSystemAccessSupported = 'showDirectoryPicker' in window
+
+const selectScreenshotDirectory = async () => {
+  try {
+    if (isFileSystemAccessSupported) {
+      // Use File System Access API for modern browsers
+      const directoryHandle = await (window as any).showDirectoryPicker()
+      screenshotPath.value = directoryHandle.name
+    } else {
+      // Fallback: create a hidden file input for directory selection
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.webkitdirectory = true
+      input.style.display = 'none'
+
+      input.onchange = (e) => {
+        const files = (e.target as HTMLInputElement).files
+        if (files && files.length > 0) {
+          // Get the directory path from the first file
+          const firstFile = files[0]
+          const pathParts = firstFile.webkitRelativePath.split('/')
+          pathParts.pop() // Remove filename to get directory path
+          screenshotPath.value = pathParts.join('/')
+        }
+      }
+
+      document.body.appendChild(input)
+      input.click()
+      document.body.removeChild(input)
+    }
+  } catch (error) {
+    console.error('Error selecting screenshot directory:', error)
+    error.value = 'Failed to select directory. Please try again.'
+  }
+}
+
+const selectRecordingDirectory = async () => {
+  try {
+    if (isFileSystemAccessSupported) {
+      // Use File System Access API for modern browsers
+      const directoryHandle = await (window as any).showDirectoryPicker()
+      recordingPath.value = directoryHandle.name
+    } else {
+      // Fallback: create a hidden file input for directory selection
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.webkitdirectory = true
+      input.style.display = 'none'
+
+      input.onchange = (e) => {
+        const files = (e.target as HTMLInputElement).files
+        if (files && files.length > 0) {
+          // Get the directory path from the first file
+          const firstFile = files[0]
+          const pathParts = firstFile.webkitRelativePath.split('/')
+          pathParts.pop() // Remove filename to get directory path
+          recordingPath.value = pathParts.join('/')
+        }
+      }
+
+      document.body.appendChild(input)
+      input.click()
+      document.body.removeChild(input)
+    }
+  } catch (error) {
+    console.error('Error selecting recording directory:', error)
+    error.value = 'Failed to select directory. Please try again.'
+  }
+}
 
 
 const initializeBackendStream = async () => {
@@ -234,8 +339,14 @@ const fetchCameraStatus = async () => {
 }
 
 const handleScreenshot = async () => {
+  if (!screenshotPath.value) {
+    error.value = 'Please select a save directory for screenshots first.'
+    return
+  }
+
   try {
     const request: CameraRequest = {
+      path: screenshotPath.value,
       cameraId: selectedCamera.value,
     }
 
@@ -248,7 +359,7 @@ const handleScreenshot = async () => {
     const data: CameraResponse = await response.json()
     if (data.success) {
       console.log('Screenshot taken:', data.data)
-      alert(`Screenshot saved: ${data.data.filename}`)
+      alert(`Screenshot saved to: ${screenshotPath.value}/${data.data.filename}`)
       error.value = null
     }
   } catch (error) {
@@ -258,8 +369,14 @@ const handleScreenshot = async () => {
 }
 
 const handleStartRecording = async () => {
+  if (!recordingPath.value) {
+    error.value = 'Please select a save directory for recordings first.'
+    return
+  }
+
   try {
     const request: CameraRequest = {
+      path: recordingPath.value,
       cameraId: selectedCamera.value,
     }
 
